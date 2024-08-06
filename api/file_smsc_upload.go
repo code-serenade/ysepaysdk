@@ -7,9 +7,14 @@ import (
 )
 
 // GenerateConfig 生成4.1配置
-func GenerateFileSmscUpload(bizContent string) common.RequestPayload {
+func GenerateFileSmscUpload(bizContent string) {
 	method := "file.smsc.upload"
-	return common.GenerateRequestPayload(method, bizContent)
+	respon, err := common.GenerateRequestPayload(method, bizContent)
+
+	if err != nil {
+		// TODO respon
+		print(respon)
+	}
 }
 
 // Meta 定义媒体文件元信息
@@ -27,8 +32,8 @@ type FileSmcsUploadContent struct {
 }
 
 func GenerateFileSmscUploadContent() FileSmcsUploadContent {
-	fileURL := "http://example.com/path/to/your/file.jpg"
-	fileData, err := utils.DownloadFile(fileURL)
+	fileURL := "file.jpg"
+	fileData, err := utils.ReadLocalFile(fileURL)
 	if err != nil {
 		log.Fatalf("无法下载文件: %v", err)
 	}

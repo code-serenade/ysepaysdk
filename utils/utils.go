@@ -1,9 +1,8 @@
 package utils
 
 import (
-	"fmt"
 	"io"
-	"net/http"
+	"os"
 	"time"
 )
 
@@ -14,19 +13,14 @@ func GetCurrentTimeStamp() string {
 	return now.Format(layout)
 }
 
-// DownloadFile 下载远程文件并返回其二进制内容
-func DownloadFile(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+func ReadLocalFile(filePath string) ([]byte, error) {
+	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer file.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to download file: %s", resp.Status)
-	}
-
-	fileData, err := io.ReadAll(resp.Body)
+	fileData, err := io.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
