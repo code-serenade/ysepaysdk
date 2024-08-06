@@ -2,8 +2,8 @@ package api
 
 import (
 	"log"
-	"ys_sdk/utils"
 
+	"github.com/CodeSerenade/ysepaysdk/utils"
 	"github.com/codingeasygo/util/converter"
 	"github.com/codingeasygo/util/xmap"
 )

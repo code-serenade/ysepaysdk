@@ -16,5 +16,5 @@ const (
 
 var (
 	IsDev   = false
-	Verbose = false
+	Verbose = false // for debug
 )

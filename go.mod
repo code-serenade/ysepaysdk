@@ -1,4 +1,4 @@
-module ys_sdk
+module github.com/CodeSerenade/ysepaysdk
 
 go 1.22.5
 
