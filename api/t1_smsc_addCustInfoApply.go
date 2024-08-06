@@ -9,6 +9,6 @@ func (c *Config) T1SmscAddCustInfoApplyRequest() (data xmap.M, err error) {
 	if IsDev {
 		url = devUrlPrefix + t1SmscAddCustInfoApplyUrl
 	}
-	_, data, err = c.Request(url, method, version, "bizContent")
+	_, data, err = c.Request(url, method, version, "bizContent") // TODO bizContent
 	return
 }
