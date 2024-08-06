@@ -7,8 +7,10 @@ import (
 )
 
 // GenerateConfig 生成4.1配置
-func GenerateFileSmscUpload(bizContent string) {
+func RequstFileSmscUpload(filePath, picType, sysFlowID string) {
 	method := "file.smsc.upload"
+
+	bizContent := generateFileSmscUploadContent(filePath, picType, sysFlowID)
 	respon, err := common.GenerateRequestPayload(method, bizContent)
 
 	if err != nil {
@@ -31,23 +33,22 @@ type FileSmcsUploadContent struct {
 	Meta FileSmcsUploadMeta `json:"meta"`
 }
 
-func GenerateFileSmscUploadContent() FileSmcsUploadContent {
-	fileURL := "file.jpg"
-	fileData, err := utils.ReadLocalFile(fileURL)
+func generateFileSmscUploadContent(filePath, picType, sysFlowID string) string {
+	fileData, err := utils.ReadLocalFile(filePath)
 	if err != nil {
 		log.Fatalf("无法下载文件: %v", err)
 	}
 
-	meta := GenerateFileSmscUploadMeta("a", "b", "c", "d")
+	meta := generateFileSmscUploadMeta("a", "b", "c", "d")
 
-	return FileSmcsUploadContent{
+	content := FileSmcsUploadContent{
 		File: fileData,
 		Meta: meta,
 	}
 
 }
 
-func GenerateFileSmscUploadMeta(sha256, picType, picName, sysFlowID string) FileSmcsUploadMeta {
+func generateFileSmscUploadMeta(sha256, picType, picName, sysFlowID string) FileSmcsUploadMeta {
 	return FileSmcsUploadMeta{
 		Sha256:    sha256,
 		PicType:   picType,
