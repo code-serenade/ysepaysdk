@@ -17,7 +17,7 @@ func (c *Config) RequstFileSmscUpload(filePath, picType, sysFlowID string) (data
 		url = devUrlPrefix + fileUploadUrl
 	}
 	bizContent := generateFileSmscUploadContent(filePath, picType, sysFlowID)
-	_, data, err = c.Request(url, method, bizContent, true)
+	_, data, err = c.Request(url, method, bizContent)
 
 	// 结构转化
 	if err != nil {

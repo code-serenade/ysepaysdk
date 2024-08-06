@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"math/big"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -169,55 +170,6 @@ func LoadConfig(configFile string) {
 	}
 }
 
-func sendUploadRequest(url string, payload *RequestPayload) (*ResponsePayload, error) {
-
-	jsonData, err := json.Marshal(payload)
-	if err != nil {
-		return nil, fmt.Errorf("JSON序列化错误: %v", err)
-	}
-
-	if Verbose {
-		log.Printf("request url %v", url)
-		log.Printf("request payload %v", string(jsonData))
-	}
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, fmt.Errorf("创建请求错误: %v", err)
-	}
-
-	req.Header.Set("Content-Type", "multipart/form-data")
-	// 设置其他必要的头信息
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("请求错误: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// if resp.StatusCode != http.StatusOK {
-	// 	return nil, fmt.Errorf("收到非200响应: %v", resp.StatusCode)
-	// }
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("读取响应体错误: %v", err)
-	}
-
-	if Verbose {
-		log.Printf("response body %v", string(body))
-	}
-
-	var responsePayload ResponsePayload
-	err = json.Unmarshal(body, &responsePayload)
-	if err != nil {
-		return nil, fmt.Errorf("JSON反序列化错误: %v", err)
-	}
-
-	return &responsePayload, nil
-}
-
 // sendRequest 发送HTTP请求到API
 func sendRequest(url string, payload *RequestPayload) (*ResponsePayload, error) {
 
@@ -275,4 +227,68 @@ func getRandomString(length int) string {
 		sb.WriteByte(ALLCHAR[num.Int64()])
 	}
 	return sb.String()
+}
+
+// sendRequest 发送HTTP请求到API
+func sendUploadRequest(url string, payload *RequestPayload) (*ResponsePayload, error) {
+
+	// 创建一个缓冲区用来存放multipart/form-data的内容
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+
+	// 根据实际的RequestPayload结构体字段继续设置
+	err := writer.WriteField("field1", payload.Field1)
+	if err != nil {
+		return nil, fmt.Errorf("设置字段 field1 错误: %v", err)
+	}
+
+	err = writer.WriteField("field2", payload.Field2)
+	if err != nil {
+		return nil, fmt.Errorf("设置字段 field2 错误: %v", err)
+	}
+
+	// 添加更多字段...
+
+	// 关闭writer以完成multipart/form-data的写入
+	err = writer.Close()
+	if err != nil {
+		return nil, fmt.Errorf("关闭 writer 错误: %v", err)
+	}
+
+	if Verbose {
+		log.Printf("request url %v", url)
+		log.Printf("request payload %v", buf.String())
+	}
+
+	req, err := http.NewRequest("POST", url, &buf)
+	if err != nil {
+		return nil, fmt.Errorf("创建请求错误: %v", err)
+	}
+
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	// 设置其他必要的头信息
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("请求错误: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("收到非200响应: %v", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(io.Reader(resp.Body))
+	if err != nil {
+		return nil, fmt.Errorf("读取响应体错误: %v", err)
+	}
+
+	var responsePayload ResponsePayload
+	err = json.Unmarshal(body, &responsePayload)
+	if err != nil {
+		return nil, fmt.Errorf("JSON反序列化错误: %v", err)
+	}
+
+	return &responsePayload, nil
 }
