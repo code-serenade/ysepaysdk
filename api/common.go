@@ -11,7 +11,6 @@ import (
 	"math/big"
 	"mime/multipart"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,6 +34,7 @@ type RequestPayload struct {
 	Version    string `json:"version"`
 }
 
+// NewRequestPayload 创建新的请求负载
 func NewRequestPayload(method, version string) *RequestPayload {
 	return &RequestPayload{
 		ReqID:     utils.CurrentYYMMDDHHMMSSS(),
@@ -45,20 +45,27 @@ func NewRequestPayload(method, version string) *RequestPayload {
 	}
 }
 
-func (r *RequestPayload) EncryptCheck(pubKey, aesKey []byte) (err error) {
+// EncryptCheck 使用公钥和AES密钥加密Check字段
+func (r *RequestPayload) EncryptCheck(pubKey, aesKey []byte) error {
 	check, err := easycrypto.RSAEncrypt(pubKey, aesKey)
 	if err != nil {
-		return
+		return err
 	}
 	r.Check = base64.StdEncoding.EncodeToString(check)
-	return
+	return nil
 }
 
-func (r *RequestPayload) EncryptBizContent(keyByte []byte) (err error) {
-	r.BizContent, err = easycrypto.AESEncryptECB(r.BizContent, keyByte)
-	return
+// EncryptBizContent 使用AES密钥加密业务内容
+func (r *RequestPayload) EncryptBizContent(keyByte []byte) error {
+	encryptedContent, err := easycrypto.AESEncryptECB(r.BizContent, keyByte)
+	if err != nil {
+		return err
+	}
+	r.BizContent = encryptedContent
+	return nil
 }
 
+// makeSignBefore 生成签名前的字符串
 func (r *RequestPayload) makeSignBefore() string {
 	m := xmap.M{
 		"timeStamp":  r.TimeStamp,
@@ -73,40 +80,44 @@ func (r *RequestPayload) makeSignBefore() string {
 	return utils.MapToUrlValues(m)
 }
 
-func (r *RequestPayload) CalcSign(key []byte) (err error) {
+// CalcSign 计算签名
+func (r *RequestPayload) CalcSign(key []byte) error {
 	content := r.makeSignBefore()
-	// content := strings.ReplaceAll(params.Encode(), "+", "%20")
 
 	if Verbose {
 		log.Printf("before CalcSign string %v", content)
 	}
 
-	r.Sign, err = easycrypto.RSASign(key, []byte(content))
+	sign, err := easycrypto.RSASign(key, []byte(content))
 	if err != nil {
-		return
+		return err
 	}
-	return
+	r.Sign = sign
+	return nil
 }
 
+// EncodeMap 编码请求负载为map
 func (r *RequestPayload) EncodeMap() map[string]string {
-	m := map[string]string{}
-	m["timeStamp"] = r.TimeStamp
-	m["method"] = r.Method
-	m["charset"] = r.Charset
-	m["sign"] = r.Sign
-	m["check"] = r.Check
-	m["bizContent"] = r.BizContent
-	m["reqId"] = r.ReqID
-	m["certId"] = r.CertID
-	m["version"] = r.Version
-	return m
+	return map[string]string{
+		"timeStamp":  r.TimeStamp,
+		"method":     r.Method,
+		"charset":    r.Charset,
+		"sign":       r.Sign,
+		"check":      r.Check,
+		"bizContent": r.BizContent,
+		"reqId":      r.ReqID,
+		"certId":     r.CertID,
+		"version":    r.Version,
+	}
 }
 
+// RequestUploadPayload 定义文件上传请求负载的结构
 type RequestUploadPayload struct {
 	RequestPayload
 	File string `json:"file"`
 }
 
+// SetFile 设置文件路径
 func (r *RequestUploadPayload) SetFile(file string) {
 	r.File = file
 }
@@ -121,36 +132,37 @@ type ResponsePayload struct {
 	Norce        string `json:"norce"`
 	Sign         string `json:"sign"`
 	BusinessData string `json:"businessData"`
-	// Resp         any // TODO
 }
 
+// Config 配置结构体
 type Config struct {
-	// ReqID      string `json:"req_id"`
 	CertID     string `json:"cert_id"`
 	PrivateKey string `json:"private_key"`
 	PublicKey  string `json:"public_key"`
 }
 
+// NewConfig 创建新的配置
 func NewConfig(conf xmap.M) *Config {
 	return &Config{
-		// ReqID:      conf.Str("req_id"),
 		CertID:     conf.Str("cert_id"),
 		PrivateKey: conf.Str("private_key"),
 		PublicKey:  conf.Str("public_key"),
 	}
 }
 
-func (c *Config) Decode(aseKey []byte, businessData string) (data xmap.M, err error) {
-	decryptedBizData, err := easycrypto.AESDecryptECB(businessData, aseKey)
+// Decode 解码业务数据
+func (c *Config) Decode(aesKey []byte, businessData string) (xmap.M, error) {
+	decryptedBizData, err := easycrypto.AESDecryptECB(businessData, aesKey)
 	if err != nil {
-		return
+		return nil, err
 	}
+	var data xmap.M
 	_, err = converter.UnmarshalJSON(bytes.NewBuffer(decryptedBizData), &data)
-	return
+	return data, err
 }
 
-// 普通POST请求
-func (c *Config) Request(url, method, version, bizContent string) (resp *ResponsePayload, data xmap.M, err error) {
+// Request 发送普通POST请求
+func (c *Config) Request(url, method, version, bizContent string) (*ResponsePayload, xmap.M, error) {
 	if Verbose {
 		log.Printf("request bizContent %v", bizContent)
 	}
@@ -158,78 +170,92 @@ func (c *Config) Request(url, method, version, bizContent string) (resp *Respons
 	payload.CertID = c.CertID
 	aesKey := []byte(getRandomString(16))
 	// 加密check
-	payload.EncryptCheck([]byte(c.PublicKey), aesKey)
+	err := payload.EncryptCheck([]byte(c.PublicKey), aesKey)
+	if err != nil {
+		log.Printf("加密check失败: %v", err)
+		return nil, nil, err
+	}
 	// 加密bizContent
 	payload.BizContent = bizContent
-	payload.EncryptBizContent(aesKey)
+	err = payload.EncryptBizContent(aesKey)
+	if err != nil {
+		log.Printf("加密bizContent失败: %v", err)
+		return nil, nil, err
+	}
 	// 处理签名
 	err = payload.CalcSign([]byte(c.PrivateKey))
 	if err != nil {
 		log.Printf("签名失败: %v", err)
-		return
+		return nil, nil, err
 	}
 
 	response, err := sendRequest(url, payload)
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 	if Verbose {
 		log.Printf("response %v", response)
 	}
 	if response.Code != successCode {
-		err = fmt.Errorf("code:%s msg:%s", response.Code, response.Msg)
-		return
+		return response, nil, fmt.Errorf("code:%s msg:%s", response.Code, response.Msg)
 	}
-	data, err = c.Decode(aesKey, response.BusinessData)
-	return
+	data, err := c.Decode(aesKey, response.BusinessData)
+	return response, data, err
 }
 
-// 文件上传请求
-func (c *Config) UploadRequest(url, method, version, filePath, bizContent string) (resp *ResponsePayload, data xmap.M, err error) {
+// UploadRequest 发送文件上传请求
+func (c *Config) UploadRequest(url, method, version, filePath, bizContent string) (*ResponsePayload, xmap.M, error) {
 	if Verbose {
 		log.Printf("request bizContent %v", bizContent)
 	}
 	file, err := os.Open(filePath)
 	if err != nil {
 		log.Printf("打开文件失败: %v", err)
-		return
+		return nil, nil, err
 	}
 	defer file.Close()
 	payload := NewRequestPayload(method, version)
 	payload.CertID = c.CertID
 	aesKey := []byte(getRandomString(16))
 	// 加密check
-	payload.EncryptCheck([]byte(c.PublicKey), aesKey)
+	err = payload.EncryptCheck([]byte(c.PublicKey), aesKey)
+	if err != nil {
+		log.Printf("加密check失败: %v", err)
+		return nil, nil, err
+	}
 	// 加密bizContent
 	payload.BizContent = bizContent
-	payload.EncryptBizContent(aesKey)
+	err = payload.EncryptBizContent(aesKey)
+	if err != nil {
+		log.Printf("加密bizContent失败: %v", err)
+		return nil, nil, err
+	}
 	// 处理签名
 	err = payload.CalcSign([]byte(c.PrivateKey))
 	if err != nil {
 		log.Printf("签名失败: %v", err)
-		return
+		return nil, nil, err
 	}
 
 	response, err := sendUploadRequest(url, payload, file)
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 	if Verbose {
 		log.Printf("response %v", converter.JSON(response))
 	}
 	if response.Code != successCode {
-		err = fmt.Errorf("code:%s msg:%s", response.Code, response.Msg)
-		return
+		return response, nil, fmt.Errorf("code:%s msg:%s", response.Code, response.Msg)
 	}
+	var data xmap.M
 	if response.SubCode == successCode {
 		_, err = converter.UnmarshalJSON(bytes.NewBuffer([]byte(response.BusinessData)), &data)
 	}
-	return
+	return response, data, err
 }
 
 // sendRequest 发送HTTP请求到API
 func sendRequest(url string, payload *RequestPayload) (*ResponsePayload, error) {
-
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("JSON序列化错误: %v", err)
@@ -246,7 +272,6 @@ func sendRequest(url string, payload *RequestPayload) (*ResponsePayload, error) 
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	// 设置其他必要的头信息
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -285,7 +310,9 @@ func sendRequest(url string, payload *RequestPayload) (*ResponsePayload, error) 
 	return &responsePayload, nil
 }
 
+// getRandomString 生成指定长度的随机字符串
 func getRandomString(length int) string {
+	const ALLCHAR = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	sb := strings.Builder{}
 	for i := 0; i < length; i++ {
 		num, _ := rand.Int(rand.Reader, big.NewInt(int64(len(ALLCHAR))))
@@ -294,28 +321,13 @@ func getRandomString(length int) string {
 	return sb.String()
 }
 
-func (r *RequestUploadPayload) Encode() string {
-	params := url.Values{}
-	params.Set("timeStamp", r.TimeStamp)
-	params.Set("method", r.Method)
-	params.Set("charset", r.Charset)
-	params.Set("check", r.Check)
-	params.Set("sign", r.Sign)
-	params.Set("bizContent", r.BizContent)
-	params.Set("reqId", r.ReqID)
-	params.Set("certId", r.CertID)
-	params.Set("version", r.Version)
-	return params.Encode()
-}
-
-// sendRequest 发送HTTP请求到API
+// sendUploadRequest 发送文件上传请求到API
 func sendUploadRequest(url string, payload *RequestPayload, file *os.File) (*ResponsePayload, error) {
 	params := payload.EncodeMap()
-	// 创建一个缓冲区用来存放multipart/form-data的内容
+
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
 
-	// 添加文件字段
 	fileWriter, err := writer.CreateFormFile("file", filepath.Base(file.Name()))
 	if err != nil {
 		return nil, fmt.Errorf("创建文件字段错误: %v", err)
@@ -325,7 +337,6 @@ func sendUploadRequest(url string, payload *RequestPayload, file *os.File) (*Res
 		return nil, fmt.Errorf("写入文件字段错误: %v", err)
 	}
 
-	// 添加其他字段
 	for key, val := range params {
 		err = writer.WriteField(key, val)
 		if err != nil {
@@ -333,13 +344,11 @@ func sendUploadRequest(url string, payload *RequestPayload, file *os.File) (*Res
 		}
 	}
 
-	// 关闭writer以完成multipart/form-data的写入
 	err = writer.Close()
 	if err != nil {
 		return nil, fmt.Errorf("关闭 writer 错误: %v", err)
 	}
 
-	// 创建HTTP请求
 	req, err := http.NewRequest("POST", url, &buf)
 	if err != nil {
 		return nil, fmt.Errorf("创建请求错误: %v", err)
@@ -347,7 +356,6 @@ func sendUploadRequest(url string, payload *RequestPayload, file *os.File) (*Res
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	// 发送请求
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -359,7 +367,6 @@ func sendUploadRequest(url string, payload *RequestPayload, file *os.File) (*Res
 		return nil, fmt.Errorf("收到非200响应: %v", resp.StatusCode)
 	}
 
-	// 读取响应
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("读取响应体错误: %v", err)
