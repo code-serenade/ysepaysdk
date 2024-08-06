@@ -111,17 +111,6 @@ func (r *RequestPayload) EncodeMap() map[string]string {
 	}
 }
 
-// RequestUploadPayload 定义文件上传请求负载的结构
-type RequestUploadPayload struct {
-	RequestPayload
-	File string `json:"file"`
-}
-
-// SetFile 设置文件路径
-func (r *RequestUploadPayload) SetFile(file string) {
-	r.File = file
-}
-
 // ResponsePayload 定义响应负载的结构
 type ResponsePayload struct {
 	Code         string `json:"code"`
