@@ -12,12 +12,13 @@ import (
 // GenerateConfig 生成4.1配置
 func (c *Config) RequstFileSmscUpload(filePath, picType, sysFlowID string) (data xmap.M, err error) {
 	method := "file.smsc.upload"
+	version := "1.0"
 	url := proUrlPrefix + fileUploadUrl
 	if IsDev {
 		url = devUrlPrefix + fileUploadUrl
 	}
-	bizContent := generateFileSmscUploadContent(filePath, picType, sysFlowID)
-	_, data, err = c.Request(url, method, bizContent)
+	fileData, bizContent := generateFileSmscUploadContent(filePath, picType, sysFlowID)
+	_, data, err = c.UploadRequest(url, method, version, fileData, bizContent)
 
 	// 结构转化
 	if err != nil {
@@ -37,11 +38,11 @@ type FileSmcsUploadMeta struct {
 
 // BizContent 定义业务请求参数
 type FileSmcsUploadContent struct {
-	File []byte             `json:"file"`
+	// File []byte             `json:"file"`
 	Meta FileSmcsUploadMeta `json:"meta"`
 }
 
-func generateFileSmscUploadContent(filePath, picType, sysFlowID string) string {
+func generateFileSmscUploadContent(filePath, picType, sysFlowID string) (string, string) {
 	fileData, err := utils.ReadLocalFile(filePath)
 	if err != nil {
 		log.Fatalf("无法下载文件: %v", err)
@@ -50,10 +51,10 @@ func generateFileSmscUploadContent(filePath, picType, sysFlowID string) string {
 	meta := generateFileSmscUploadMeta(string(hash[:]), picType, "", sysFlowID)
 
 	content := FileSmcsUploadContent{
-		File: fileData,
+		// File: fileData,
 		Meta: meta,
 	}
-	return converter.JSON(content)
+	return filePath, converter.JSON(content)
 }
 
 func generateFileSmscUploadMeta(sha256, picType, picName, sysFlowID string) FileSmcsUploadMeta {

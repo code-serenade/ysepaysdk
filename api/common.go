@@ -13,11 +13,13 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sort"
 	"strings"
 	"ys_sdk/utils"
 
 	"github.com/CodeSerenade/easycrypto"
 	"github.com/codingeasygo/util/converter"
+	"github.com/codingeasygo/util/xhttp"
 	"github.com/codingeasygo/util/xmap"
 )
 
@@ -58,14 +60,45 @@ func (r *RequestPayload) EncryptBizContent(keyByte []byte) (err error) {
 	return
 }
 
-func (r *RequestPayload) CalcSign(key []byte) (err error) {
-	params := url.Values{}
-	params.Set("timeStamp", r.TimeStamp)
-	params.Set("method", r.Method)
-	params.Set("charset", r.Charset)
-	params.Set("check", r.Check)
+func (r *RequestPayload) makeSignBefore() string {
+	m := xmap.M{}
+	// converter.UnmarshalJSON(bytes.NewBuffer([]byte(converter.JSON(r))), &m)
+	m["timeStamp"] = r.TimeStamp
+	m["method"] = r.Method
+	m["charset"] = r.Charset
+	m["reqId"] = r.ReqID
+	m["certId"] = r.CertID
+	m["version"] = r.Version
+	m["check"] = r.Check
+	m["bizContent"] = r.BizContent
 
-	content := strings.ReplaceAll(params.Encode(), "+", "%20")
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	sb := strings.Builder{}
+	for _, k := range keys {
+		sb.WriteString(k)
+		sb.WriteString("=")
+		sb.WriteString(m.Str(k))
+		sb.WriteString("&")
+	}
+	signDataStr := sb.String()
+	if len(signDataStr) > 0 {
+		signDataStr = signDataStr[:len(signDataStr)-1]
+	}
+	return signDataStr
+}
+
+func (r *RequestPayload) CalcSign(key []byte) (err error) {
+	content := r.makeSignBefore()
+	// content := strings.ReplaceAll(params.Encode(), "+", "%20")
+
+	if Verbose {
+		log.Printf("before CalcSign string %v", content)
+	}
 
 	r.Sign, err = easycrypto.RSASign(key, []byte(content))
 	if err != nil {
@@ -74,13 +107,22 @@ func (r *RequestPayload) CalcSign(key []byte) (err error) {
 	return
 }
 
+type RequestUploadPayload struct {
+	RequestPayload
+	File string `json:"file"`
+}
+
+func (r *RequestUploadPayload) SetFile(file string) {
+	r.File = file
+}
+
 // ResponsePayload 定义响应负载的结构
 type ResponsePayload struct {
 	Code         string `json:"code"`
 	Msg          string `json:"msg"`
 	SubCode      string `json:"subCode"`
 	SubMsg       string `json:"subMsg"`
-	TimeStamp    int64  `json:"timeStamp"`
+	TimeStamp    string `json:"timeStamp"`
 	Norce        string `json:"norce"`
 	Sign         string `json:"sign"`
 	BusinessData string `json:"businessData"`
@@ -112,8 +154,11 @@ func (c *Config) Decode(aseKey []byte, businessData string) (data xmap.M, err er
 	return
 }
 
-func (c *Config) Request(url, method, bizContent string) (resp *ResponsePayload, data xmap.M, err error) {
-	payload := NewRequestPayload(method, "1.0")
+func (c *Config) Request(url, method, version, bizContent string) (resp *ResponsePayload, data xmap.M, err error) {
+	if Verbose {
+		log.Printf("request bizContent %v", bizContent)
+	}
+	payload := NewRequestPayload(method, version)
 	payload.CertID = c.CertID
 	aesKey := []byte(getRandomString(16))
 	// 加密check
@@ -127,16 +172,47 @@ func (c *Config) Request(url, method, bizContent string) (resp *ResponsePayload,
 		log.Printf("签名失败: %v", err)
 		return
 	}
+
+	response, err := sendRequest(url, payload)
+	if err != nil {
+		return
+	}
 	if Verbose {
-		// log.Printf("request bizContent %v", bizContent)
+		log.Printf("response %v", response)
+	}
+	if response.Code != successCode {
+		err = fmt.Errorf("code:%s msg:%s", response.Code, response.Msg)
+		return
+	}
+	data, err = c.Decode(aesKey, response.BusinessData)
+	return
+}
+
+func (c *Config) UploadRequest(url, method, version, fileData, bizContent string) (resp *ResponsePayload, data xmap.M, err error) {
+	if Verbose {
+		log.Printf("request bizContent %v", bizContent)
+	}
+	payload := NewRequestPayload(method, version)
+	payload.CertID = c.CertID
+	aesKey := []byte(getRandomString(16))
+	// 加密check
+	payload.EncryptCheck([]byte(c.PublicKey), aesKey)
+	// 加密bizContent
+	payload.BizContent = bizContent
+	payload.EncryptBizContent(aesKey)
+	// 处理签名
+	err = payload.CalcSign([]byte(c.PrivateKey))
+	if err != nil {
+		log.Printf("签名失败: %v", err)
+		return
 	}
 
-	var response *ResponsePayload
-	if strings.Contains(url, fileUploadUrl) {
-		response, err = sendUploadRequest(url, payload)
-	} else {
-		response, err = sendRequest(url, payload)
+	uploadPayload := &RequestUploadPayload{
+		RequestPayload: *payload,
+		File:           fileData,
 	}
+
+	response, err := sendUploadRequest(url, uploadPayload)
 	if err != nil {
 		return
 	}
@@ -211,6 +287,14 @@ func sendRequest(url string, payload *RequestPayload) (*ResponsePayload, error) 
 		log.Printf("response body %v", string(body))
 	}
 
+	kbody, kerr := base64.StdEncoding.DecodeString(string(body))
+	if kerr == nil {
+		body = kbody
+	}
+	if Verbose {
+		log.Printf("response body %v", string(body))
+	}
+
 	var responsePayload ResponsePayload
 	err = json.Unmarshal(body, &responsePayload)
 	if err != nil {
@@ -229,35 +313,53 @@ func getRandomString(length int) string {
 	return sb.String()
 }
 
+func (r *RequestUploadPayload) Encode() string {
+	params := url.Values{}
+	params.Set("timeStamp", r.TimeStamp)
+	params.Set("method", r.Method)
+	params.Set("charset", r.Charset)
+	params.Set("check", r.Check)
+	params.Set("sign", r.Sign)
+	params.Set("bizContent", r.BizContent)
+	params.Set("reqId", r.ReqID)
+	params.Set("certId", r.CertID)
+	params.Set("version", r.Version)
+	return params.Encode()
+}
+
 // sendRequest 发送HTTP请求到API
-func sendUploadRequest(url string, payload *RequestPayload) (*ResponsePayload, error) {
+func sendUploadRequest(url string, payload *RequestUploadPayload) (*ResponsePayload, error) {
+	// fileds.SetValue("file", payload.File)
+	result, kerr := xhttp.UploadMap(nil, "file", payload.File, "%v?%v", url, payload.Encode())
+
+	if Verbose {
+		log.Printf("response body %v kerr %v", converter.JSON(result), kerr)
+	}
 
 	// 创建一个缓冲区用来存放multipart/form-data的内容
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
 
-	// 根据实际的RequestPayload结构体字段继续设置
-	err := writer.WriteField("field1", payload.Field1)
-	if err != nil {
-		return nil, fmt.Errorf("设置字段 field1 错误: %v", err)
-	}
-
-	err = writer.WriteField("field2", payload.Field2)
-	if err != nil {
-		return nil, fmt.Errorf("设置字段 field2 错误: %v", err)
-	}
-
-	// 添加更多字段...
+	writer.WriteField("timeStamp", payload.TimeStamp)
+	writer.WriteField("method", payload.Method)
+	writer.WriteField("charset", payload.Charset)
+	writer.WriteField("check", payload.Check)
+	writer.WriteField("sign", payload.Sign)
+	writer.WriteField("bizContent", payload.BizContent)
+	writer.WriteField("reqId", payload.ReqID)
+	writer.WriteField("certId", payload.CertID)
+	writer.WriteField("version", payload.Version)
+	writer.WriteField("file", payload.File)
 
 	// 关闭writer以完成multipart/form-data的写入
-	err = writer.Close()
+	err := writer.Close()
 	if err != nil {
 		return nil, fmt.Errorf("关闭 writer 错误: %v", err)
 	}
 
 	if Verbose {
 		log.Printf("request url %v", url)
-		log.Printf("request payload %v", buf.String())
+		log.Printf("request payload %v", converter.JSON(payload))
 	}
 
 	req, err := http.NewRequest("POST", url, &buf)
@@ -275,13 +377,17 @@ func sendUploadRequest(url string, payload *RequestPayload) (*ResponsePayload, e
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("收到非200响应: %v", resp.StatusCode)
-	}
+	// if resp.StatusCode != http.StatusOK {
+	// 	return nil, fmt.Errorf("收到非200响应: %v", resp.StatusCode)
+	// }
 
 	body, err := io.ReadAll(io.Reader(resp.Body))
 	if err != nil {
 		return nil, fmt.Errorf("读取响应体错误: %v", err)
+	}
+
+	if Verbose {
+		log.Printf("response body %v", string(body))
 	}
 
 	var responsePayload ResponsePayload
