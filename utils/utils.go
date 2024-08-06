@@ -13,6 +13,12 @@ func GetCurrentTimeStamp() string {
 	return now.Format(layout)
 }
 
+func CurrentYYMMDDHHMMSSS() string {
+	now := time.Now()
+	const layout = "20060102150405"
+	return now.Format(layout)
+}
+
 func ReadLocalFile(filePath string) ([]byte, error) {
 	file, err := os.Open(filePath)
 	if err != nil {

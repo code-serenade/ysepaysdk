@@ -1,22 +1,30 @@
 package api
 
 import (
+	"crypto/sha256"
 	"log"
-	"ys_sdk/common"
 	"ys_sdk/utils"
+
+	"github.com/codingeasygo/util/converter"
+	"github.com/codingeasygo/util/xmap"
 )
 
 // GenerateConfig 生成4.1配置
-func RequstFileSmscUpload(filePath, picType, sysFlowID string) {
+func (c *Config) RequstFileSmscUpload(filePath, picType, sysFlowID string) (data xmap.M, err error) {
 	method := "file.smsc.upload"
-
+	url := proUrlPrefix + fileUploadUrl
+	if IsDev {
+		url = devUrlPrefix + fileUploadUrl
+	}
 	bizContent := generateFileSmscUploadContent(filePath, picType, sysFlowID)
-	respon, err := common.GenerateRequestPayload(method, bizContent)
+	_, data, err = c.Request(url, method, bizContent)
 
+	// 结构转化
 	if err != nil {
 		// TODO respon
-		print(respon)
+		return
 	}
+	return
 }
 
 // Meta 定义媒体文件元信息
@@ -38,14 +46,14 @@ func generateFileSmscUploadContent(filePath, picType, sysFlowID string) string {
 	if err != nil {
 		log.Fatalf("无法下载文件: %v", err)
 	}
-
-	meta := generateFileSmscUploadMeta("a", "b", "c", "d")
+	hash := sha256.Sum256(fileData)
+	meta := generateFileSmscUploadMeta(string(hash[:]), picType, "", sysFlowID)
 
 	content := FileSmcsUploadContent{
 		File: fileData,
 		Meta: meta,
 	}
-
+	return converter.JSON(content)
 }
 
 func generateFileSmscUploadMeta(sha256, picType, picName, sysFlowID string) FileSmcsUploadMeta {
