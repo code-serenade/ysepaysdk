@@ -13,13 +13,13 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"ys_sdk/utils"
 
 	"github.com/CodeSerenade/easycrypto"
 	"github.com/codingeasygo/util/converter"
-	"github.com/codingeasygo/util/xhttp"
 	"github.com/codingeasygo/util/xmap"
 )
 
@@ -107,6 +107,20 @@ func (r *RequestPayload) CalcSign(key []byte) (err error) {
 	return
 }
 
+func (r *RequestPayload) EncodeMap() map[string]string {
+	m := map[string]string{}
+	m["timeStamp"] = r.TimeStamp
+	m["method"] = r.Method
+	m["charset"] = r.Charset
+	m["sign"] = r.Sign
+	m["check"] = r.Check
+	m["bizContent"] = r.BizContent
+	m["reqId"] = r.ReqID
+	m["certId"] = r.CertID
+	m["version"] = r.Version
+	return m
+}
+
 type RequestUploadPayload struct {
 	RequestPayload
 	File string `json:"file"`
@@ -154,6 +168,7 @@ func (c *Config) Decode(aseKey []byte, businessData string) (data xmap.M, err er
 	return
 }
 
+// 普通POST请求
 func (c *Config) Request(url, method, version, bizContent string) (resp *ResponsePayload, data xmap.M, err error) {
 	if Verbose {
 		log.Printf("request bizContent %v", bizContent)
@@ -188,10 +203,17 @@ func (c *Config) Request(url, method, version, bizContent string) (resp *Respons
 	return
 }
 
-func (c *Config) UploadRequest(url, method, version, fileData, bizContent string) (resp *ResponsePayload, data xmap.M, err error) {
+// 文件上传请求
+func (c *Config) UploadRequest(url, method, version, filePath, bizContent string) (resp *ResponsePayload, data xmap.M, err error) {
 	if Verbose {
 		log.Printf("request bizContent %v", bizContent)
 	}
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Printf("打开文件失败: %v", err)
+		return
+	}
+	defer file.Close()
 	payload := NewRequestPayload(method, version)
 	payload.CertID = c.CertID
 	aesKey := []byte(getRandomString(16))
@@ -207,43 +229,21 @@ func (c *Config) UploadRequest(url, method, version, fileData, bizContent string
 		return
 	}
 
-	uploadPayload := &RequestUploadPayload{
-		RequestPayload: *payload,
-		File:           fileData,
-	}
-
-	response, err := sendUploadRequest(url, uploadPayload)
+	response, err := sendUploadRequest(url, payload, file)
 	if err != nil {
 		return
 	}
 	if Verbose {
-		log.Printf("response %v", response)
+		log.Printf("response %v", converter.JSON(response))
 	}
 	if response.Code != successCode {
 		err = fmt.Errorf("code:%s msg:%s", response.Code, response.Msg)
 		return
 	}
-	data, err = c.Decode(aesKey, response.BusinessData)
+	if response.SubCode == successCode {
+		_, err = converter.UnmarshalJSON(bytes.NewBuffer([]byte(response.BusinessData)), &data)
+	}
 	return
-}
-
-var AppConfig Config
-
-func LoadConfig(configFile string) {
-	file, err := os.Open(configFile)
-	if err != nil {
-		log.Fatalf("无法打开配置文件: %v", err)
-	}
-	defer file.Close()
-
-	bytes, err := io.ReadAll(io.Reader(file))
-	if err != nil {
-		log.Fatalf("无法读取配置文件: %v", err)
-	}
-
-	if err := json.Unmarshal(bytes, &AppConfig); err != nil {
-		log.Fatalf("无法解析配置文件: %v", err)
-	}
 }
 
 // sendRequest 发送HTTP请求到API
@@ -274,9 +274,9 @@ func sendRequest(url string, payload *RequestPayload) (*ResponsePayload, error) 
 	}
 	defer resp.Body.Close()
 
-	// if resp.StatusCode != http.StatusOK {
-	// 	return nil, fmt.Errorf("收到非200响应: %v", resp.StatusCode)
-	// }
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("收到非200响应: %v", resp.StatusCode)
+	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -328,48 +328,45 @@ func (r *RequestUploadPayload) Encode() string {
 }
 
 // sendRequest 发送HTTP请求到API
-func sendUploadRequest(url string, payload *RequestUploadPayload) (*ResponsePayload, error) {
-	// fileds.SetValue("file", payload.File)
-	result, kerr := xhttp.UploadMap(nil, "file", payload.File, "%v?%v", url, payload.Encode())
-
-	if Verbose {
-		log.Printf("response body %v kerr %v", converter.JSON(result), kerr)
-	}
-
+func sendUploadRequest(url string, payload *RequestPayload, file *os.File) (*ResponsePayload, error) {
+	params := payload.EncodeMap()
 	// 创建一个缓冲区用来存放multipart/form-data的内容
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
 
-	writer.WriteField("timeStamp", payload.TimeStamp)
-	writer.WriteField("method", payload.Method)
-	writer.WriteField("charset", payload.Charset)
-	writer.WriteField("check", payload.Check)
-	writer.WriteField("sign", payload.Sign)
-	writer.WriteField("bizContent", payload.BizContent)
-	writer.WriteField("reqId", payload.ReqID)
-	writer.WriteField("certId", payload.CertID)
-	writer.WriteField("version", payload.Version)
-	writer.WriteField("file", payload.File)
+	// 添加文件字段
+	fileWriter, err := writer.CreateFormFile("file", filepath.Base(file.Name()))
+	if err != nil {
+		return nil, fmt.Errorf("创建文件字段错误: %v", err)
+	}
+	_, err = io.Copy(fileWriter, file)
+	if err != nil {
+		return nil, fmt.Errorf("写入文件字段错误: %v", err)
+	}
+
+	// 添加其他字段
+	for key, val := range params {
+		err = writer.WriteField(key, val)
+		if err != nil {
+			return nil, fmt.Errorf("设置字段 %s 错误: %v", key, err)
+		}
+	}
 
 	// 关闭writer以完成multipart/form-data的写入
-	err := writer.Close()
+	err = writer.Close()
 	if err != nil {
 		return nil, fmt.Errorf("关闭 writer 错误: %v", err)
 	}
 
-	if Verbose {
-		log.Printf("request url %v", url)
-		log.Printf("request payload %v", converter.JSON(payload))
-	}
-
+	// 创建HTTP请求
 	req, err := http.NewRequest("POST", url, &buf)
 	if err != nil {
 		return nil, fmt.Errorf("创建请求错误: %v", err)
 	}
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-	// 设置其他必要的头信息
 
+	// 发送请求
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -377,14 +374,17 @@ func sendUploadRequest(url string, payload *RequestUploadPayload) (*ResponsePayl
 	}
 	defer resp.Body.Close()
 
-	// if resp.StatusCode != http.StatusOK {
-	// 	return nil, fmt.Errorf("收到非200响应: %v", resp.StatusCode)
-	// }
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("收到非200响应: %v", resp.StatusCode)
+	}
 
-	body, err := io.ReadAll(io.Reader(resp.Body))
+	// 读取响应
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("读取响应体错误: %v", err)
 	}
+
+	body, _ = base64.StdEncoding.DecodeString(string(body))
 
 	if Verbose {
 		log.Printf("response body %v", string(body))

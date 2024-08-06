@@ -10,7 +10,8 @@ const (
 	t1SmscAddCustInfoApplyUrl          = "/openapi/t1/smsc/addCustInfoApply"
 	reportScanUnionAppIdAddOrUpdateUrl = "/openapi/report/scan/union/appIdAddOrUpdate"
 
-	successCode = "00000"
+	successCode    = "00000"
+	subSuccessCode = "0000"
 )
 
 var (

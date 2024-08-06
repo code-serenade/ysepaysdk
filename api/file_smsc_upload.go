@@ -1,7 +1,6 @@
 package api
 
 import (
-	"crypto/sha256"
 	"log"
 	"ys_sdk/utils"
 
@@ -17,8 +16,8 @@ func (c *Config) RequstFileSmscUpload(filePath, picType, sysFlowID string) (data
 	if IsDev {
 		url = devUrlPrefix + fileUploadUrl
 	}
-	fileData, bizContent := generateFileSmscUploadContent(filePath, picType, sysFlowID)
-	_, data, err = c.UploadRequest(url, method, version, fileData, bizContent)
+	bizContent := generateFileSmscUploadContent(filePath, picType, sysFlowID)
+	_, data, err = c.UploadRequest(url, method, version, filePath, bizContent)
 
 	// 结构转化
 	if err != nil {
@@ -42,19 +41,19 @@ type FileSmcsUploadContent struct {
 	Meta FileSmcsUploadMeta `json:"meta"`
 }
 
-func generateFileSmscUploadContent(filePath, picType, sysFlowID string) (string, string) {
+func generateFileSmscUploadContent(filePath, picType, sysFlowID string) string {
 	fileData, err := utils.ReadLocalFile(filePath)
 	if err != nil {
 		log.Fatalf("无法下载文件: %v", err)
 	}
-	hash := sha256.Sum256(fileData)
-	meta := generateFileSmscUploadMeta(string(hash[:]), picType, "", sysFlowID)
+	hash := utils.CalcSHA256(string(fileData))
+	meta := generateFileSmscUploadMeta(hash, picType, "", sysFlowID)
 
 	content := FileSmcsUploadContent{
 		// File: fileData,
 		Meta: meta,
 	}
-	return filePath, converter.JSON(content)
+	return converter.JSON(content)
 }
 
 func generateFileSmscUploadMeta(sha256, picType, picName, sysFlowID string) FileSmcsUploadMeta {

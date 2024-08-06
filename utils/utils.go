@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"io"
 	"os"
 	"time"
@@ -32,4 +34,15 @@ func ReadLocalFile(filePath string) ([]byte, error) {
 	}
 
 	return fileData, nil
+}
+
+func CalcSHA256(input string) string {
+	// 创建一个新的 SHA-256 哈希对象
+	hasher := sha256.New()
+	// 将输入字符串转换为字节并写入哈希对象
+	hasher.Write([]byte(input))
+	// 计算哈希值并返回结果
+	hash := hasher.Sum(nil)
+	// 将哈希值转换为十六进制格式的字符串
+	return hex.EncodeToString(hash)
 }
