@@ -79,7 +79,7 @@ type ResponsePayload struct {
 	Msg          string `json:"msg"`
 	SubCode      string `json:"subCode"`
 	SubMsg       string `json:"subMsg"`
-	TimeStamp    string `json:"timeStamp"`
+	TimeStamp    int64  `json:"timeStamp"`
 	Norce        string `json:"norce"`
 	Sign         string `json:"sign"`
 	BusinessData string `json:"businessData"`
@@ -118,6 +118,7 @@ func (c *Config) Request(url, method, bizContent string) (resp *ResponsePayload,
 	// 加密check
 	payload.EncryptCheck([]byte(c.PublicKey), aesKey)
 	// 加密bizContent
+	payload.BizContent = bizContent
 	payload.EncryptBizContent(aesKey)
 	// 处理签名
 	err = payload.CalcSign([]byte(c.PrivateKey))
@@ -125,8 +126,16 @@ func (c *Config) Request(url, method, bizContent string) (resp *ResponsePayload,
 		log.Printf("签名失败: %v", err)
 		return
 	}
+	if Verbose {
+		// log.Printf("request bizContent %v", bizContent)
+	}
 
-	response, err := sendRequest(url, payload)
+	var response *ResponsePayload
+	if strings.Contains(url, fileUploadUrl) {
+		response, err = sendUploadRequest(url, payload)
+	} else {
+		response, err = sendRequest(url, payload)
+	}
 	if err != nil {
 		return
 	}
@@ -160,6 +169,55 @@ func LoadConfig(configFile string) {
 	}
 }
 
+func sendUploadRequest(url string, payload *RequestPayload) (*ResponsePayload, error) {
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("JSON序列化错误: %v", err)
+	}
+
+	if Verbose {
+		log.Printf("request url %v", url)
+		log.Printf("request payload %v", string(jsonData))
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("创建请求错误: %v", err)
+	}
+
+	req.Header.Set("Content-Type", "multipart/form-data")
+	// 设置其他必要的头信息
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("请求错误: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// if resp.StatusCode != http.StatusOK {
+	// 	return nil, fmt.Errorf("收到非200响应: %v", resp.StatusCode)
+	// }
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("读取响应体错误: %v", err)
+	}
+
+	if Verbose {
+		log.Printf("response body %v", string(body))
+	}
+
+	var responsePayload ResponsePayload
+	err = json.Unmarshal(body, &responsePayload)
+	if err != nil {
+		return nil, fmt.Errorf("JSON反序列化错误: %v", err)
+	}
+
+	return &responsePayload, nil
+}
+
 // sendRequest 发送HTTP请求到API
 func sendRequest(url string, payload *RequestPayload) (*ResponsePayload, error) {
 
@@ -188,13 +246,17 @@ func sendRequest(url string, payload *RequestPayload) (*ResponsePayload, error) 
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("收到非200响应: %v", resp.StatusCode)
-	}
+	// if resp.StatusCode != http.StatusOK {
+	// 	return nil, fmt.Errorf("收到非200响应: %v", resp.StatusCode)
+	// }
 
-	body, err := io.ReadAll(io.Reader(resp.Body))
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("读取响应体错误: %v", err)
+	}
+
+	if Verbose {
+		log.Printf("response body %v", string(body))
 	}
 
 	var responsePayload ResponsePayload
