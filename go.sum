@@ -2,3 +2,7 @@ github.com/CodeSerenade/easycrypto v0.0.0-20240806073254-589ebb9102b8 h1:omUGm50
 github.com/CodeSerenade/easycrypto v0.0.0-20240806073254-589ebb9102b8/go.mod h1:6PnjWTFqS8d6WMjlC7iBf+UZ4bALMu5JrMER+GWtAps=
 github.com/codingeasygo/util v0.0.0-20231206062002-1ce2f004b7d9 h1:lgZYRVFBxBu2ELumEtJHFINCz+Cs1eBVbv8XlhNP1FI=
 github.com/codingeasygo/util v0.0.0-20231206062002-1ce2f004b7d9/go.mod h1:CE705pc3Xn2F3nqMKhvfaigeXeDudpdteTzbf+2jwig=
+github.com/codingeasygo/web v0.0.0-20230907002627-38429b961da0 h1:EB2qTZ3dth9C7XAiQhmJbHY5faGfkVUr6p95oAdgm8k=
+github.com/codingeasygo/web v0.0.0-20230907002627-38429b961da0/go.mod h1:YOIpmocUy7mG3Q/z2tb37AR8PVNqdY9qs9R88ykBR70=
+golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420 h1:a8jGStKg0XqKDlKqjLrXn0ioF5MH36pT7Z0BRTqLhbk=
+golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=

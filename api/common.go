@@ -14,7 +14,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"ys_sdk/utils"
 
@@ -61,35 +60,17 @@ func (r *RequestPayload) EncryptBizContent(keyByte []byte) (err error) {
 }
 
 func (r *RequestPayload) makeSignBefore() string {
-	m := xmap.M{}
-	// converter.UnmarshalJSON(bytes.NewBuffer([]byte(converter.JSON(r))), &m)
-	m["timeStamp"] = r.TimeStamp
-	m["method"] = r.Method
-	m["charset"] = r.Charset
-	m["reqId"] = r.ReqID
-	m["certId"] = r.CertID
-	m["version"] = r.Version
-	m["check"] = r.Check
-	m["bizContent"] = r.BizContent
-
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
+	m := xmap.M{
+		"timeStamp":  r.TimeStamp,
+		"method":     r.Method,
+		"charset":    r.Charset,
+		"reqId":      r.ReqID,
+		"certId":     r.CertID,
+		"version":    r.Version,
+		"check":      r.Check,
+		"bizContent": r.BizContent,
 	}
-	sort.Strings(keys)
-
-	sb := strings.Builder{}
-	for _, k := range keys {
-		sb.WriteString(k)
-		sb.WriteString("=")
-		sb.WriteString(m.Str(k))
-		sb.WriteString("&")
-	}
-	signDataStr := sb.String()
-	if len(signDataStr) > 0 {
-		signDataStr = signDataStr[:len(signDataStr)-1]
-	}
-	return signDataStr
+	return utils.MapToUrlValues(m)
 }
 
 func (r *RequestPayload) CalcSign(key []byte) (err error) {
