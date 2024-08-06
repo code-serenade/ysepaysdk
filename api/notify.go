@@ -44,6 +44,8 @@ func (p *NotifyPayload) VerifySign(key []byte) (err error) {
 	return easycrypto.RSAVerify(key, []byte(content), p.Sign)
 }
 
+// Handle 函数的逻辑是处理和分发 HTTP 请求到相应的处理程序。
+// 它使用了一个正则表达式模式来匹配 URL，并将匹配到的请求分发到对应的处理程序。
 func Handle(pre string, mux *web.SessionMux) {
 	mux.HandleFunc("^"+pre+"/v1/ysepay/notifyCust(\\?.*)?$", handleNotify(NotifyCustDone))
 	mux.HandleFunc("^"+pre+"/v1/ysepay/notifyPay(\\?.*)?$", handleNotify(NotifyPayDone))
