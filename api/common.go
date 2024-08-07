@@ -15,8 +15,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/CodeSerenade/easycrypto"
-	"github.com/CodeSerenade/ysepaysdk/utils"
+	"github.com/code-serenade/easycrypto"
+	"github.com/code-serenade/ysepaysdk/utils"
 	"github.com/codingeasygo/util/converter"
 	"github.com/codingeasygo/util/xmap"
 )

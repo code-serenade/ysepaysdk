@@ -1,10 +1,10 @@
-module github.com/CodeSerenade/ysepaysdk
+module github.com/code-serenade/ysepaysdk
 
 go 1.22.3
 
 require (
 	github.com/Centny/rediscache v0.0.0-20220105111036-c599d3d485bd
-	github.com/CodeSerenade/easycrypto v0.0.0-20240807070535-da9d44f1c64d
+	github.com/code-serenade/easycrypto v0.0.0-20240807111119-a2b8229ee99a
 	github.com/codingeasygo/util v0.0.0-20231206062002-1ce2f004b7d9
 	github.com/codingeasygo/web v0.0.0-20230907002627-38429b961da0
 	github.com/wfunc/go v0.0.0-20240619065114-a3cea0d7973a

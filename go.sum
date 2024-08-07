@@ -1,9 +1,9 @@
 github.com/Centny/rediscache v0.0.0-20220105111036-c599d3d485bd h1:Z3sASyL/Hlg8CgoXaKmC4uVqA6/HmmO06gBDQM+xBeg=
 github.com/Centny/rediscache v0.0.0-20220105111036-c599d3d485bd/go.mod h1:wZuQnW9+q1oHLzO9Qqsazp+eQJhrJQy8DZdLMkNgnY8=
-github.com/CodeSerenade/easycrypto v0.0.0-20240807070535-da9d44f1c64d h1:B6Z5udrSfq0CfyNHNjGKzKYpuqhpXA9LF2lhopJrDZk=
-github.com/CodeSerenade/easycrypto v0.0.0-20240807070535-da9d44f1c64d/go.mod h1:6PnjWTFqS8d6WMjlC7iBf+UZ4bALMu5JrMER+GWtAps=
 github.com/benbjohnson/clock v1.1.0 h1:Q92kusRqC1XV2MjkWETPvjJVqKetz1OzxZB7mHJLju8=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
+github.com/code-serenade/easycrypto v0.0.0-20240807111119-a2b8229ee99a h1:iqIKB0XjD/gTEjHXervA8i3SS8bp4wlVqyNwdftR5ZE=
+github.com/code-serenade/easycrypto v0.0.0-20240807111119-a2b8229ee99a/go.mod h1:gn7EOfS4K1N/i5IWxs0HYuKyPxcceO1YfmooYYTa8QA=
 github.com/codingeasygo/util v0.0.0-20231206062002-1ce2f004b7d9 h1:lgZYRVFBxBu2ELumEtJHFINCz+Cs1eBVbv8XlhNP1FI=
 github.com/codingeasygo/util v0.0.0-20231206062002-1ce2f004b7d9/go.mod h1:CE705pc3Xn2F3nqMKhvfaigeXeDudpdteTzbf+2jwig=
 github.com/codingeasygo/web v0.0.0-20230907002627-38429b961da0 h1:EB2qTZ3dth9C7XAiQhmJbHY5faGfkVUr6p95oAdgm8k=

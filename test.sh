@@ -26,7 +26,7 @@ done
 if [ "`uname`" = "Darwin" ];
 then
    gocov convert build/all.cov > build/coverage.json
-   cat build/all.cov | sed 's/github.com\/CodeSerenade\/ysepaysdk\///' > build/coverage.cov
+   cat build/all.cov | sed 's/github.com\/code-serenade\/ysepaysdk\///' > build/coverage.cov
    cat build/coverage.json | gocov-html > build/coverage.html
    cat build/coverage.cov | gocover-cobertura > build/coverage.xml
    go tool cover -func build/all.cov | grep total

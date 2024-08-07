@@ -1,11 +1,11 @@
 #!/bin/sh
 set -xe
 
-cd ~/go/src/github.com/CodeSerenade/easycrypto
+cd ~/go/src/github.com/code-serenade/easycrypto
 git pull
 easycrypto_sha=`git rev-parse HEAD`
 
-cd ~/go/src/github.com/CodeSerenade/ysepaysdk
-go get github.com/CodeSerenade/easycrypto@$easycrypto_sha
+cd ~/go/src/github.com/code-serenade/ysepaysdk
+go get github.com/code-serenade/easycrypto@$easycrypto_sha
 
 go mod tidy

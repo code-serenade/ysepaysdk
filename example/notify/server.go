@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/Centny/rediscache"
-	ysepaysdk "github.com/CodeSerenade/ysepaysdk/api"
+	ysepaysdk "github.com/code-serenade/ysepaysdk/api"
 	"github.com/codingeasygo/util/xmap"
 	"github.com/codingeasygo/web"
 	"github.com/wfunc/go/session"

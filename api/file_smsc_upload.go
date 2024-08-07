@@ -3,7 +3,7 @@ package api
 import (
 	"log"
 
-	"github.com/CodeSerenade/ysepaysdk/utils"
+	"github.com/code-serenade/ysepaysdk/utils"
 	"github.com/codingeasygo/util/converter"
 	"github.com/codingeasygo/util/xmap"
 )

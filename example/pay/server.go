@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	ysepaysdk "github.com/CodeSerenade/ysepaysdk/api"
+	ysepaysdk "github.com/code-serenade/ysepaysdk/api"
 )
 
 func main() {
