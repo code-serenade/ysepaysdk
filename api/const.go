@@ -11,7 +11,6 @@ const (
 	t1SmscAddCustInfoApplyUrl          = "/openapi/t1/smsc/addCustInfoApply"
 	reportScanUnionAppIdAddOrUpdateUrl = "/openapi/report/scan/union/appIdAddOrUpdate"
 	reportScanUnionAddUrl              = "/openapi/report/scan/union/reportAdd"
-	reportScanUnionUploadUrl           = "/openapi/t1/smsc/addCustInfoApply"
 
 	t1SmscAuditCustInfoApplyUrl            = "/openapi/t1/smsc/auditCustInfoApply"
 	pregateTradeFindCmmtAreaInfoListUrl    = "/openapi/pregate/trade/findCmmtAreaInfoList"
