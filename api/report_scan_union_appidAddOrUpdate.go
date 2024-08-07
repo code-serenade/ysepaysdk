@@ -5,6 +5,7 @@ import (
 	"github.com/codingeasygo/util/xmap"
 )
 
+// 4.2 业务请求参数
 type ReportScanUnionAppidAddOrUpdateParam struct {
 	ChannelId         string `json:"channelId"`         // 交易报备渠道编号,目前只支持微信，CUPS_WECHAT-银联微信；NUCC_WECHAT-网联微信；
 	MercId            string `json:"mercId"`            // 企业商户号
@@ -12,6 +13,7 @@ type ReportScanUnionAppidAddOrUpdateParam struct {
 	AppletId          string `json:"appletId"`          // 小程序appid,公众号appid、小程序appid二者必选一
 }
 
+// 4.2 必填选项为Y的参数
 func NewReportScanUnionAppidAddOrUpdateParam(channelId, mercId string) *ReportScanUnionAppidAddOrUpdateParam {
 	return &ReportScanUnionAppidAddOrUpdateParam{
 		ChannelId: channelId,
@@ -19,6 +21,7 @@ func NewReportScanUnionAppidAddOrUpdateParam(channelId, mercId string) *ReportSc
 	}
 }
 
+// 这段代码需要帮我生成
 func (c *Config) ReportScanUnionAppidAddOrUpdateRequest(param *ReportScanUnionAppidAddOrUpdateParam) (data xmap.M, err error) {
 	method := "report.scan.union.appIdAddOrUpdate"
 	version := "1.0"
