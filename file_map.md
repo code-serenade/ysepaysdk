@@ -39,12 +39,6 @@
 - [notify/server.go](example/notify/server.go) - 通知示例代码
 - [pay/server.go](example/pay/server.go) - 支付示例代码
 
-## Temp
-
-- [cert_id.txt](temp/cert_id.txt) - 证书 ID 文件
-- [private_key.pem](temp/private_key.pem) - 私钥文件
-- [public_key.pem](temp/public_key.pem) - 公钥文件
-
 ## TestData
 
 - [conf.json](testdata/conf.json) - 测试配置文件

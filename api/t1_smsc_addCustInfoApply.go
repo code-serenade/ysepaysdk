@@ -6,7 +6,7 @@ import (
 )
 
 // 4.2 业务请求参数
-type ReportScanUnionUploadParam struct {
+type T1SmscAddCustInfoApplyParam struct {
 	CustInfo    CustInfo   `json:"custInfo"`    // 基本信息
 	CrpInfo     CrpInfo    `json:"crpInfo"`     // 法人信息
 	StlAccInfo  StlAccInfo `json:"stlAccInfo"`  // 结算信息
@@ -106,9 +106,9 @@ type BusInfo struct {
 	RegAddr        string `json:"regAddr"`        // 注册地址
 }
 
-// 创建 ReportScanUnionUploadParam 实例
-func NewT1SmscAddCustInfoApplyParam(custInfo CustInfo, crpInfo CrpInfo, stlAccInfo StlAccInfo, busInfo BusInfo, thirdFlowId string) *ReportScanUnionUploadParam {
-	return &ReportScanUnionUploadParam{
+// 创建 T1SmscAddCustInfoApplyParam 实例
+func NewT1SmscAddCustInfoApplyParam(custInfo CustInfo, crpInfo CrpInfo, stlAccInfo StlAccInfo, busInfo BusInfo, thirdFlowId string) *T1SmscAddCustInfoApplyParam {
+	return &T1SmscAddCustInfoApplyParam{
 		CustInfo:    custInfo,
 		CrpInfo:     crpInfo,
 		StlAccInfo:  stlAccInfo,
@@ -118,7 +118,7 @@ func NewT1SmscAddCustInfoApplyParam(custInfo CustInfo, crpInfo CrpInfo, stlAccIn
 }
 
 // 根据文档生成的请求方法
-func (c *Config) T1SmscAddCustInfoApplyRequest(param *ReportScanUnionUploadParam) (data xmap.M, err error) {
+func (c *Config) T1SmscAddCustInfoApplyRequest(param *T1SmscAddCustInfoApplyParam) (data xmap.M, err error) {
 	method := "t1.smsc.addCustInfoApply"
 	version := "1.2"
 	url := proUrlPrefix + t1SmscAddCustInfoApplyUrl
