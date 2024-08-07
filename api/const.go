@@ -26,6 +26,6 @@ const (
 )
 
 var (
-	IsDev   = false
+	IsDev   = false // 是否开发环境
 	Verbose = false // for debug
 )

@@ -18,12 +18,6 @@ func (c *Config) RequstFileSmscUpload(filePath, picType, sysFlowID string) (data
 	}
 	bizContent := generateFileSmscUploadContent(filePath, picType, sysFlowID)
 	_, data, err = c.UploadRequest(url, method, version, filePath, bizContent)
-
-	// 结构转化
-	if err != nil {
-		// TODO respon
-		return
-	}
 	return
 }
 

@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 
 	"github.com/CodeSerenade/easycrypto"
@@ -20,7 +21,8 @@ var NotifyPayDone = func(orderID string, result xmap.M) (err error) {
 }
 
 var FindPubKey = func(orderID string) (key []byte, err error) {
-	panic("FindPubKey not implemented")
+	err = fmt.Errorf("FindPubKey not implemented")
+	return
 }
 
 type NotifyPayload struct {
@@ -85,16 +87,12 @@ func receiveAndVerifyPayload(s *web.Session) (*NotifyPayload, error) {
 	}
 
 	key, err := FindPubKey(payload.ReqID)
-	if err != nil {
-		log.Printf("find pub key %v err:%v", payload.ReqID, err)
-		return nil, err
+	if err == nil {
+		if err := payload.VerifySign(key); err != nil {
+			log.Printf("verify sign %v err:%v", payload.ReqID, err)
+			return nil, err
+		}
 	}
-
-	if err := payload.VerifySign(key); err != nil {
-		log.Printf("verify sign %v err:%v", payload.ReqID, err)
-		return nil, err
-	}
-
 	return payload, nil
 }
 

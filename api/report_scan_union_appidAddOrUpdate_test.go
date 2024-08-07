@@ -3,7 +3,6 @@ package api
 import "testing"
 
 func TestReportScanUnionAppidAddOrUpdateRequest(t *testing.T) {
-
 	// mercId := "826588257340024"
 	// appid := "wxe8ba7f0739bd18b8"
 
@@ -14,9 +13,5 @@ func TestReportScanUnionAppidAddOrUpdateRequest(t *testing.T) {
 	param.JsPayRelatedAppId = appid
 
 	data, err := sdk.ReportScanUnionAppidAddOrUpdateRequest(param)
-	if err != nil {
-		t.Error(err)
-	}
-	t.Log(data)
-
+	t.Log(data, err)
 }

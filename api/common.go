@@ -123,6 +123,20 @@ type ResponsePayload struct {
 	BusinessData string `json:"businessData"`
 }
 
+func (r *ResponsePayload) EncodeMap() (m xmap.M) {
+	m = xmap.M{
+		"code":         r.Code,
+		"msg":          r.Msg,
+		"subCode":      r.SubCode,
+		"subMsg":       r.SubMsg,
+		"timeStamp":    r.TimeStamp,
+		"norce":        r.Norce,
+		"sign":         r.Sign,
+		"businessData": r.BusinessData,
+	}
+	return
+}
+
 // Config 配置结构体
 type Config struct {
 	CertID     string `json:"cert_id"`
@@ -139,8 +153,24 @@ func NewConfig(conf xmap.M) *Config {
 	}
 }
 
+func NewConfigFromFile(filePath string) (*Config, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+	var conf Config
+	err = json.Unmarshal(data, &conf)
+	if err != nil {
+		return nil, err
+	}
+	return &conf, nil
+}
+
 // Decode 解码业务数据
 func (c *Config) Decode(aesKey []byte, businessData string) (xmap.M, error) {
+	if len(businessData) < 1 {
+		return nil, fmt.Errorf("businessData is empty")
+	}
 	decryptedBizData, err := easycrypto.AESDecryptECB(businessData, aesKey)
 	if err != nil {
 		return nil, err
@@ -189,6 +219,9 @@ func (c *Config) Request(url, method, version, bizContent string) (*ResponsePayl
 		return response, nil, fmt.Errorf("code:%s msg:%s", response.Code, response.Msg)
 	}
 	data, err := c.Decode(aesKey, response.BusinessData)
+	if err != nil {
+		data = response.EncodeMap()
+	}
 	return response, data, err
 }
 
@@ -234,11 +267,14 @@ func (c *Config) UploadRequest(url, method, version, filePath, bizContent string
 		log.Printf("response %v", converter.JSON(response))
 	}
 	if response.Code != successCode {
-		return response, nil, fmt.Errorf("code:%s msg:%s", response.Code, response.Msg)
+		return response, response.EncodeMap(), fmt.Errorf("code:%s msg:%s", response.Code, response.Msg)
 	}
 	var data xmap.M
 	if response.SubCode == successCode {
 		_, err = converter.UnmarshalJSON(bytes.NewBuffer([]byte(response.BusinessData)), &data)
+	}
+	if err != nil {
+		data = response.EncodeMap()
 	}
 	return response, data, err
 }
