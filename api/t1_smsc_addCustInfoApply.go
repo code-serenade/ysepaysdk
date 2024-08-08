@@ -19,7 +19,7 @@ type CustInfo struct {
 	AgtMercId     string `json:"agtMercId"`     // 代理商编号
 	MercName      string `json:"mercName"`      // 商户名称
 	MercShortName string `json:"mercShortName"` // 商户简称
-	MercType      string `json:"mercType"`      // 商户类型
+	MercType      string `json:"mercType"`      // 商户类型,2 小微 3个体 4企业 5 社会组织 6 事业单位 7 政府机关
 	MccCd         string `json:"mccCd"`         // mcc码
 	ContactMail   string `json:"contactMail"`   // 联系人邮箱
 	ContactMan    string `json:"contactMan"`    // 联系人

@@ -218,11 +218,12 @@ func (c *Config) Request(url, method, version, bizContent string) (*ResponsePayl
 	if response.Code != successCode {
 		return response, nil, fmt.Errorf("code:%s msg:%s", response.Code, response.Msg)
 	}
-	data, err := c.Decode(aesKey, response.BusinessData)
-	if err != nil {
-		data = response.EncodeMap()
+	var result = response.EncodeMap()
+	data, kerr := c.Decode(aesKey, response.BusinessData)
+	if kerr == nil {
+		result["bizContent"] = data
 	}
-	return response, data, err
+	return response, result, err
 }
 
 // UploadRequest 发送文件上传请求
@@ -269,14 +270,15 @@ func (c *Config) UploadRequest(url, method, version, filePath, bizContent string
 	if response.Code != successCode {
 		return response, response.EncodeMap(), fmt.Errorf("code:%s msg:%s", response.Code, response.Msg)
 	}
-	var data xmap.M
+	var result, data xmap.M
+	result = response.EncodeMap()
 	if response.SubCode == successCode {
-		_, err = converter.UnmarshalJSON(bytes.NewBuffer([]byte(response.BusinessData)), &data)
+		_, kerr := converter.UnmarshalJSON(bytes.NewBuffer([]byte(response.BusinessData)), &data)
+		if kerr == nil {
+			result["bizContent"] = data
+		}
 	}
-	if err != nil {
-		data = response.EncodeMap()
-	}
-	return response, data, err
+	return response, result, err
 }
 
 // sendRequest 发送HTTP请求到API
@@ -410,4 +412,11 @@ func sendUploadRequest(url string, payload *RequestPayload, file *os.File) (*Res
 	}
 
 	return &responsePayload, nil
+}
+
+func mergeMap(m1, m2 xmap.M) xmap.M {
+	for k, v := range m1 {
+		m2[k] = v
+	}
+	return m2
 }
