@@ -23,16 +23,16 @@ func (c *Config) RequstFileSmscUpload(filePath, picType, sysFlowID string) (data
 
 // Meta 定义媒体文件元信息
 type FileSmcsUploadMeta struct {
-	Sha256    string `json:"sha256"`
-	PicType   string `json:"picType"`
-	PicNm     string `json:"picNm"`
-	SysFlowID string `json:"sysFlowId"`
+	Sha256    string `json:"sha256,omitempty"`
+	PicType   string `json:"picType,omitempty"`
+	PicNm     string `json:"picNm,omitempty"`
+	SysFlowID string `json:"sysFlowId,omitempty"`
 }
 
 // BizContent 定义业务请求参数
 type FileSmcsUploadContent struct {
-	// File []byte             `json:"file"`
-	Meta FileSmcsUploadMeta `json:"meta"`
+	// File []byte             `json:"file,omitempty"`
+	Meta FileSmcsUploadMeta `json:"meta,omitempty"`
 }
 
 func generateFileSmscUploadContent(filePath, picType, sysFlowID string) string {

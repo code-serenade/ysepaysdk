@@ -6,8 +6,8 @@ import (
 )
 
 type T1SmscAuditCustInfoApplyParam struct {
-	AuditFlag string `json:"auditFlag"` // 审核标志：Y-通过，N-拒绝
-	SysFlowId string `json:"sysFlowId"` // 入网申请流水号
+	AuditFlag string `json:"auditFlag,omitempty"` // 审核标志：Y-通过，N-拒绝
+	SysFlowId string `json:"sysFlowId,omitempty"` // 入网申请流水号
 }
 
 func NewT1SmscAuditCustInfoApplyParam(sysFlowId string) *T1SmscAuditCustInfoApplyParam {

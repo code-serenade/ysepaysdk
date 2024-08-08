@@ -23,15 +23,15 @@ import (
 
 // RequestPayload 定义公共请求参数的结构
 type RequestPayload struct {
-	TimeStamp  string `json:"timeStamp"`
-	Method     string `json:"method"`
-	Charset    string `json:"charset"`
-	Sign       string `json:"sign"`
-	Check      string `json:"check"`
-	BizContent string `json:"bizContent"`
-	ReqID      string `json:"reqId"`
-	CertID     string `json:"certId"`
-	Version    string `json:"version"`
+	TimeStamp  string `json:"timeStamp,omitempty"`
+	Method     string `json:"method,omitempty"`
+	Charset    string `json:"charset,omitempty"`
+	Sign       string `json:"sign,omitempty"`
+	Check      string `json:"check,omitempty"`
+	BizContent string `json:"bizContent,omitempty"`
+	ReqID      string `json:"reqId,omitempty"`
+	CertID     string `json:"certId,omitempty"`
+	Version    string `json:"version,omitempty"`
 }
 
 // NewRequestPayload 创建新的请求负载
@@ -113,14 +113,14 @@ func (r *RequestPayload) EncodeMap() map[string]string {
 
 // ResponsePayload 定义响应负载的结构
 type ResponsePayload struct {
-	Code         string `json:"code"`
-	Msg          string `json:"msg"`
-	SubCode      string `json:"subCode"`
-	SubMsg       string `json:"subMsg"`
-	TimeStamp    string `json:"timeStamp"`
-	Norce        string `json:"norce"`
-	Sign         string `json:"sign"`
-	BusinessData string `json:"businessData"`
+	Code         string `json:"code,omitempty"`
+	Msg          string `json:"msg,omitempty"`
+	SubCode      string `json:"subCode,omitempty"`
+	SubMsg       string `json:"subMsg,omitempty"`
+	TimeStamp    string `json:"timeStamp,omitempty"`
+	Norce        string `json:"norce,omitempty"`
+	Sign         string `json:"sign,omitempty"`
+	BusinessData string `json:"businessData,omitempty"`
 }
 
 func (r *ResponsePayload) EncodeMap() (m xmap.M) {
@@ -139,9 +139,9 @@ func (r *ResponsePayload) EncodeMap() (m xmap.M) {
 
 // Config 配置结构体
 type Config struct {
-	CertID     string `json:"cert_id"`
-	PrivateKey string `json:"private_key"`
-	PublicKey  string `json:"public_key"`
+	CertID     string `json:"cert_id,omitempty"`
+	PrivateKey string `json:"private_key,omitempty"`
+	PublicKey  string `json:"public_key,omitempty"`
 }
 
 // NewConfig 创建新的配置

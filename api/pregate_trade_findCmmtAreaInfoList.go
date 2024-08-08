@@ -6,9 +6,9 @@ import (
 )
 
 type PregateTradeFindCmmtAreaInfoListParam struct {
-	PageNumber string `json:"pageNumber"` // 当前页码
-	PageSize   string `json:"pageSize"`   // 每页显示条数,最大50
-	CityName   string `json:"cityName"`   // 地区码名称
+	PageNumber string `json:"pageNumber,omitempty"` // 当前页码
+	PageSize   string `json:"pageSize,omitempty"`   // 每页显示条数,最大50
+	CityName   string `json:"cityName,omitempty"`   // 地区码名称
 }
 
 func NewPregateTradeFindCmmtAreaInfoListParam(cityName string) *PregateTradeFindCmmtAreaInfoListParam {

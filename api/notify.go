@@ -26,12 +26,12 @@ var FindPubKey = func(orderID string) (key []byte, err error) {
 }
 
 type NotifyPayload struct {
-	TimeStamp  string `json:"timeStamp"`
-	Src        string `json:"src"`
-	ReqID      string `json:"reqId"`
-	Charset    string `json:"charset"`
-	Sign       string `json:"sign"`
-	BizContent string `json:"bizContent"`
+	TimeStamp  string `json:"timeStamp,omitempty"`
+	Src        string `json:"src,omitempty"`
+	ReqID      string `json:"reqId,omitempty"`
+	Charset    string `json:"charset,omitempty"`
+	Sign       string `json:"sign,omitempty"`
+	BizContent string `json:"bizContent,omitempty"`
 }
 
 func (p *NotifyPayload) VerifySign(key []byte) (err error) {

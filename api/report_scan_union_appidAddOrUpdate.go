@@ -7,10 +7,10 @@ import (
 
 // 4.2 业务请求参数
 type ReportScanUnionAppidAddOrUpdateParam struct {
-	ChannelId         string `json:"channelId"`         // 交易报备渠道编号,目前只支持微信，CUPS_WECHAT-银联微信；NUCC_WECHAT-网联微信；
-	MercId            string `json:"mercId"`            // 企业商户号
-	JsPayRelatedAppId string `json:"jsPayRelatedAppId"` // 公众号appid,公众号appid、小程序appid二者必选一
-	AppletId          string `json:"appletId"`          // 小程序appid,公众号appid、小程序appid二者必选一
+	ChannelId         string `json:"channelId,omitempty"`         // 交易报备渠道编号,目前只支持微信，CUPS_WECHAT-银联微信；NUCC_WECHAT-网联微信；
+	MercId            string `json:"mercId,omitempty"`            // 企业商户号
+	JsPayRelatedAppId string `json:"jsPayRelatedAppId,omitempty"` // 公众号appid,公众号appid、小程序appid二者必选一
+	AppletId          string `json:"appletId,omitempty"`          // 小程序appid,公众号appid、小程序appid二者必选一
 }
 
 // 4.2 必填选项为Y的参数

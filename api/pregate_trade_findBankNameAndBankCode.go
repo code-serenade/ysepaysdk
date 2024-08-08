@@ -6,8 +6,8 @@ import (
 )
 
 type PregateTradeFindBankNameAndBankCodeParam struct {
-	OpenBankName string `json:"openBankName"` //银行名称
-	CityCode     string `json:"cityCode"`     //地区编码
+	OpenBankName string `json:"openBankName,omitempty"` //银行名称
+	CityCode     string `json:"cityCode,omitempty"`     //地区编码
 }
 
 func NewPregateTradeFindBankNameAndBankCodeParam(openBankName string, cityCode string) *PregateTradeFindBankNameAndBankCodeParam {
