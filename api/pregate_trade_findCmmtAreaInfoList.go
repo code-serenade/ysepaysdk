@@ -9,6 +9,7 @@ type PregateTradeFindCmmtAreaInfoListParam struct {
 	PageNumber string `json:"pageNumber,omitempty"` // 当前页码
 	PageSize   string `json:"pageSize,omitempty"`   // 每页显示条数,最大50
 	CityName   string `json:"cityName,omitempty"`   // 地区码名称
+	CityCd     string `json:"cityCd,omitempty"`     // 地区码
 }
 
 func NewPregateTradeFindCmmtAreaInfoListParam(cityName string) *PregateTradeFindCmmtAreaInfoListParam {

@@ -20,6 +20,8 @@ const (
 	weChatPayUrl  = "/openapi/unify/basePay/scan/weChatPay/js" // 新增的地址
 	alipayLifeUrl = "/openapi/unify/alipay/js"
 
+	aggregationScanMccQueryUrl = "/openapi/aggregation/scan/mccQuery"
+
 	successCode    = "00000"
 	subSuccessCode = "0000"
 )
