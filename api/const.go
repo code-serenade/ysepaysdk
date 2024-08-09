@@ -21,6 +21,7 @@ const (
 	alipayLifeUrl = "/openapi/unify/alipay/js"
 
 	aggregationScanMccQueryUrl = "/openapi/aggregation/scan/mccQuery"
+	smscQueryCustApplyUrl      = "/openapi/smsc/queryCustApply"
 
 	successCode    = "00000"
 	subSuccessCode = "0000"
