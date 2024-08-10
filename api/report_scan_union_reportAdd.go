@@ -113,10 +113,7 @@ func NewReportScanUnionAddParam(channelCode, mercId, mccSubCd, busiType, mercSho
 func (c *Config) ReportScanUnionAddRequest(param *ReportScanUnionAddParam) (data xmap.M, err error) {
 	method := "report.scan.union.add"
 	version := "1.0"
-	url := proUrlPrefix + reportScanUnionAddUrl
-	if IsDev {
-		url = devUrlPrefix + reportScanUnionAddUrl
-	}
+	url := methodToUrl(method)
 	bizContent := converter.JSON(param)
 	_, data, err = c.Request(url, method, version, bizContent)
 	return

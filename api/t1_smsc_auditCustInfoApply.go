@@ -20,10 +20,7 @@ func NewT1SmscAuditCustInfoApplyParam(sysFlowId string) *T1SmscAuditCustInfoAppl
 func (c *Config) T1SmscAuditCustInfoApplyRequest(param *T1SmscAuditCustInfoApplyParam) (data xmap.M, err error) {
 	method := "t1.smsc.auditCustInfoApply"
 	version := "1.0"
-	url := proUrlPrefix + t1SmscAuditCustInfoApplyUrl
-	if IsDev {
-		url = devUrlPrefix + t1SmscAuditCustInfoApplyUrl
-	}
+	url := methodToUrl(method)
 	bizContent := converter.JSON(param)
 	_, data, err = c.Request(url, method, version, bizContent)
 	return

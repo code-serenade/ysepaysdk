@@ -23,10 +23,7 @@ func NewPregateTradeFindCmmtAreaInfoListParam(cityName string) *PregateTradeFind
 func (c *Config) PregateTradeFindCmmtAreaInfoListRequest(param *PregateTradeFindCmmtAreaInfoListParam) (data xmap.M, err error) {
 	method := "pregate.trade.findCmmtAreaInfoList"
 	version := "1.0"
-	url := proUrlPrefix + pregateTradeFindCmmtAreaInfoListUrl
-	if IsDev {
-		url = devUrlPrefix + pregateTradeFindCmmtAreaInfoListUrl
-	}
+	url := methodToUrl(method)
 	bizContent := converter.JSON(param)
 	_, data, err = c.Request(url, method, version, bizContent)
 	return

@@ -20,10 +20,7 @@ func NewPregateTradeFindBankNameAndBankCodeParam(openBankName string, cityCode s
 func (c *Config) PregateTradeFindBankNameAndBankCodeRequest(param *PregateTradeFindBankNameAndBankCodeParam) (data xmap.M, err error) {
 	method := "pregate.trade.findBankNameAndBankCode"
 	version := "1.0"
-	url := proUrlPrefix + pregateTradeFindBankNameAndBankCodeUrl
-	if IsDev {
-		url = devUrlPrefix + pregateTradeFindBankNameAndBankCodeUrl
-	}
+	url := methodToUrl(method)
 	bizContent := converter.JSON(param)
 	_, data, err = c.Request(url, method, version, bizContent)
 	return

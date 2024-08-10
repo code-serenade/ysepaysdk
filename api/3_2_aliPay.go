@@ -54,10 +54,7 @@ func NewAlipayLifeRequestParam(orderId, note, amount, payeeMercId, timeOutExpres
 func (c *Config) AlipayLifeRequest(param *AlipayLifeRequestParam) (data xmap.M, err error) {
 	method := "unify.basePay.scan.alipay.life"
 	version := "1.0"
-	url := proUrlPrefix + alipayLifeUrl
-	if IsDev {
-		url = devUrlPrefix + alipayLifeUrl
-	}
+	url := methodToUrl(method)
 	bizContent := converter.JSON(param)
 	_, data, err = c.Request(url, method, version, bizContent)
 	return

@@ -12,10 +12,7 @@ import (
 func (c *Config) RequstFileSmscUpload(filePath, picType, sysFlowID string) (data xmap.M, err error) {
 	method := "file.smsc.upload"
 	version := "1.0"
-	url := proUrlPrefix + fileUploadUrl
-	if IsDev {
-		url = devUrlPrefix + fileUploadUrl
-	}
+	url := methodToUrl(method)
 	bizContent := generateFileSmscUploadContent(filePath, picType, sysFlowID)
 	_, data, err = c.UploadRequest(url, method, version, filePath, bizContent)
 	return

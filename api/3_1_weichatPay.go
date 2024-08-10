@@ -111,10 +111,7 @@ func NewWeChatPayRequestParam(orderId, note, amount, payeeMercId, timeOutExpress
 func (c *Config) WeChatPayRequest(param *WeChatPayRequestParam) (data xmap.M, err error) {
 	method := "unify.basePay.scan.weChatPay.js"
 	version := "1.0"
-	url := proUrlPrefix + weChatPayUrl
-	if IsDev {
-		url = devUrlPrefix + weChatPayUrl
-	}
+	url := methodToUrl(method)
 	bizContent := converter.JSON(param)
 	_, data, err = c.Request(url, method, version, bizContent)
 	return

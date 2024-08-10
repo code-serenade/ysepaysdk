@@ -24,10 +24,7 @@ type CodeScanD0FeeParam struct {
 func (c *Config) T1SmscSignRequest(param *T1SmscSignParam) (data xmap.M, err error) {
 	method := "t1.smsc.sign"
 	version := "1.2"
-	url := proUrlPrefix + t1SmscSignUrl
-	if IsDev {
-		url = devUrlPrefix + t1SmscSignUrl
-	}
+	url := methodToUrl(method)
 	bizContent := converter.JSON(param)
 	_, data, err = c.Request(url, method, version, bizContent)
 	return
