@@ -66,10 +66,10 @@ func handleNotify(notifyFunc func(orderID string, result xmap.M) error) web.Hand
 			log.Printf("error parsing bizContent: %v", err)
 			return s.SendPlainText("success")
 		}
-
+		log.Printf("handleNotify result %v", converter.JSON(result))
 		if notifyFunc != nil {
 			if err := notifyFunc(payload.ReqID, result); err != nil {
-				log.Printf("notification function error: %v", err)
+				log.Printf("handleNotify(%v) notifyFunc error: %v", payload.ReqID, err)
 				return s.SendPlainText("fail")
 			}
 		}
