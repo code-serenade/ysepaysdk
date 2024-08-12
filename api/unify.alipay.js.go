@@ -52,7 +52,7 @@ func NewAlipayLifeRequestParam(orderId, note, amount, payeeMercId, timeOutExpres
 
 // 根据文档生成的请求方法
 func (c *Config) AlipayLifeRequest(param *AlipayLifeRequestParam) (data xmap.M, err error) {
-	method := "unify.basePay.scan.alipay.life"
+	method := "unify.alipay.js"
 	version := "1.0"
 	url := methodToUrl(method)
 	bizContent := converter.JSON(param)
