@@ -1,9 +1,12 @@
 package utils
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
+	"math/big"
+	"net/url"
 	"os"
 	"sort"
 	"strings"
@@ -61,14 +64,37 @@ func MapToUrlValues(m xmap.M) string {
 
 	sb := strings.Builder{}
 	for _, k := range keys {
-		sb.WriteString(k)
-		sb.WriteString("=")
-		sb.WriteString(m.Str(k))
-		sb.WriteString("&")
+		if v := m.Str(k); len(v) > 0 {
+			sb.WriteString(k)
+			sb.WriteString("=")
+			sb.WriteString(v)
+			sb.WriteString("&")
+		}
 	}
 	signDataStr := sb.String()
 	if len(signDataStr) > 0 {
 		signDataStr = signDataStr[:len(signDataStr)-1]
 	}
 	return signDataStr
+}
+
+func MapToUrlValuesString(m xmap.M) string {
+	values := url.Values{}
+	for k := range m {
+		if v := m.Str(k); len(v) > 0 {
+			values.Set(k, v)
+		}
+	}
+	return strings.ReplaceAll(values.Encode(), "+", "%20")
+}
+
+// GetRandomString 生成指定长度的随机字符串
+func GetRandomString(length int) string {
+	const ALLCHAR = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	sb := strings.Builder{}
+	for i := 0; i < length; i++ {
+		num, _ := rand.Int(rand.Reader, big.NewInt(int64(len(ALLCHAR))))
+		sb.WriteByte(ALLCHAR[num.Int64()])
+	}
+	return sb.String()
 }
