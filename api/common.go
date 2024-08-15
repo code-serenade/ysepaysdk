@@ -84,9 +84,9 @@ func (r *RequestPayload) makeSignBefore() string {
 func (r *RequestPayload) CalcSign(key []byte) error {
 	content := r.makeSignBefore()
 
-	if Verbose {
-		log.Printf("before CalcSign string %v", content)
-	}
+	// if Verbose {
+	// 	log.Printf("before CalcSign string %v", content)
+	// }
 
 	sign, err := easycrypto.RSASign(key, []byte(content))
 	if err != nil {
@@ -316,9 +316,9 @@ func sendRequest(url string, payload *RequestPayload) (*ResponsePayload, error) 
 		return nil, fmt.Errorf("读取响应体错误: %v", err)
 	}
 
-	if Verbose {
-		log.Printf("response body %v", string(body))
-	}
+	// if Verbose {
+	// 	log.Printf("response body %v", string(body))
+	// }
 
 	kbody, kerr := base64.StdEncoding.DecodeString(string(body))
 	if kerr == nil {
