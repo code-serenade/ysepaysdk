@@ -74,7 +74,7 @@ func NewUnifyScanQrcodePayRequest(orderId, note, amount, payeeMercId, notifyUrl,
 }
 
 func (c *Config) UnifyScanQrcodePay(param *UnifyScanQrcodePayRequest) (data xmap.M, err error) {
-	method := "unify.scan.qrcode.pay"
+	method := "unify.scan.qrcodepay"
 	version := "1.0"
 	url := methodToUrl(method)
 	bizContent := converter.JSON(param)
