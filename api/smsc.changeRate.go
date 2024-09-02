@@ -72,7 +72,7 @@ func NewSmscChangeRateParam(custId string) *SmscChangeRateParam {
 // 根据文档生成的请求方法
 func (c *Config) SmscChangeRateRequest(param *SmscChangeRateParam) (data xmap.M, err error) {
 	method := "smsc.changeRate"
-	version := "1.1"
+	version := "1.4"
 	url := methodToUrl(method)
 	bizContent := converter.JSON(param)
 	_, data, err = c.Request(url, method, version, bizContent)
