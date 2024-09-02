@@ -18,6 +18,7 @@ import (
 	"github.com/code-serenade/easycrypto"
 	"github.com/code-serenade/ysepaysdk/utils"
 	"github.com/codingeasygo/util/converter"
+	"github.com/codingeasygo/util/uuid"
 	"github.com/codingeasygo/util/xmap"
 )
 
@@ -37,7 +38,7 @@ type RequestPayload struct {
 // NewRequestPayload 创建新的请求负载
 func NewRequestPayload(method, version string) *RequestPayload {
 	return &RequestPayload{
-		ReqID:     utils.CurrentYYMMDDHHMMSSS(),
+		ReqID:     uuid.New(),
 		TimeStamp: utils.GetCurrentTimeStamp(),
 		Method:    method,
 		Charset:   "utf-8", // 固定值
@@ -83,11 +84,6 @@ func (r *RequestPayload) makeSignBefore() string {
 // CalcSign 计算签名
 func (r *RequestPayload) CalcSign(key []byte) error {
 	content := r.makeSignBefore()
-
-	if Verbose {
-		log.Printf("before CalcSign string %v", content)
-	}
-
 	sign, err := easycrypto.RSASign(key, []byte(content))
 	if err != nil {
 		return err
@@ -287,39 +283,28 @@ func sendRequest(url string, payload *RequestPayload) (*ResponsePayload, error) 
 	if err != nil {
 		return nil, fmt.Errorf("JSON序列化错误: %v", err)
 	}
-
 	if Verbose {
 		log.Printf("request url %v", url)
 		log.Printf("request payload %v", string(jsonData))
 	}
-
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("创建请求错误: %v", err)
 	}
-
 	req.Header.Set("Content-Type", "application/json")
-
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("请求错误: %v", err)
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("收到非200响应: %v", resp.StatusCode)
 	}
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("读取响应体错误: %v", err)
 	}
-
-	if Verbose {
-		log.Printf("response body %v", string(body))
-	}
-
 	kbody, kerr := base64.StdEncoding.DecodeString(string(body))
 	if kerr == nil {
 		body = kbody
@@ -327,13 +312,11 @@ func sendRequest(url string, payload *RequestPayload) (*ResponsePayload, error) 
 	if Verbose {
 		log.Printf("response body %v", string(body))
 	}
-
 	var responsePayload ResponsePayload
 	err = json.Unmarshal(body, &responsePayload)
 	if err != nil {
 		return nil, fmt.Errorf("JSON反序列化错误: %v", err)
 	}
-
 	return &responsePayload, nil
 }
 
@@ -363,54 +346,43 @@ func sendUploadRequest(url string, payload *RequestPayload, file *os.File) (*Res
 	if err != nil {
 		return nil, fmt.Errorf("写入文件字段错误: %v", err)
 	}
-
 	for key, val := range params {
 		err = writer.WriteField(key, val)
 		if err != nil {
 			return nil, fmt.Errorf("设置字段 %s 错误: %v", key, err)
 		}
 	}
-
 	err = writer.Close()
 	if err != nil {
 		return nil, fmt.Errorf("关闭 writer 错误: %v", err)
 	}
-
 	req, err := http.NewRequest("POST", url, &buf)
 	if err != nil {
 		return nil, fmt.Errorf("创建请求错误: %v", err)
 	}
-
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("请求错误: %v", err)
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("收到非200响应: %v", resp.StatusCode)
 	}
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("读取响应体错误: %v", err)
 	}
-
 	body, _ = base64.StdEncoding.DecodeString(string(body))
-
 	if Verbose {
 		log.Printf("response body %v", string(body))
 	}
-
 	var responsePayload ResponsePayload
 	err = json.Unmarshal(body, &responsePayload)
 	if err != nil {
 		return nil, fmt.Errorf("JSON反序列化错误: %v", err)
 	}
-
 	return &responsePayload, nil
 }
 
