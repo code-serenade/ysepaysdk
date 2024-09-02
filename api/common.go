@@ -18,6 +18,7 @@ import (
 	"github.com/code-serenade/easycrypto"
 	"github.com/code-serenade/ysepaysdk/utils"
 	"github.com/codingeasygo/util/converter"
+	"github.com/codingeasygo/util/uuid"
 	"github.com/codingeasygo/util/xmap"
 )
 
@@ -37,7 +38,7 @@ type RequestPayload struct {
 // NewRequestPayload 创建新的请求负载
 func NewRequestPayload(method, version string) *RequestPayload {
 	return &RequestPayload{
-		ReqID:     utils.CurrentYYMMDDHHMMSSS(),
+		ReqID:     uuid.New(),
 		TimeStamp: utils.GetCurrentTimeStamp(),
 		Method:    method,
 		Charset:   "utf-8", // 固定值
