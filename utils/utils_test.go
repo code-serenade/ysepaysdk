@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"fmt"
 	"testing"
 	"time"
+
+	"github.com/codingeasygo/util/uuid"
 )
 
 func TestGetCurrentTimeStamp(t *testing.T) {
@@ -20,4 +23,8 @@ func TestGetCurrentTimeStamp(t *testing.T) {
 	if parsedTime.After(now) || parsedTime.Before(now.Add(-1*time.Minute)) {
 		t.Logf("时间戳不是当前时间: %v", timestamp)
 	}
+}
+
+func TestUUID(t *testing.T) {
+	fmt.Println(uuid.New())
 }
