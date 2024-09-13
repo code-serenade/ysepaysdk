@@ -187,7 +187,10 @@ func (c *Config) Request(url, method, version, bizContent string) (*ResponsePayl
 	// 加密check
 	err := payload.EncryptCheck([]byte(c.PublicKey), aesKey)
 	if err != nil {
-		log.Printf("加密check失败: %v", err)
+		log.Printf("加密check失败: %v\n", err)
+		if Verbose {
+			log.Printf("publickey: %v\n", c.PublicKey)
+		}
 		return nil, nil, err
 	}
 	// 加密bizContent
